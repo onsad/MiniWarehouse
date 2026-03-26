@@ -1,0 +1,246 @@
+﻿@page "/"
+@inject MiniWarehouse.Services.ProductService ProductService
+
+<NavMenu />
+
+<div class="grid">
+    <div>
+        <div class="card">
+            <h3>Produkty</h3>
+
+            <div style="display:flex; gap:8px; margin-bottom:8px; align-items:center">
+                <input class="input" placeholder="Hledej podle nazev" @bind="searchTerm" />
+                <select class="input" style="width:160px" @bind="filterCategory">
+                    <option value="">Všechny kategorie</option>
+                    <option>Ovoce</option>
+                    <option>Napoje</option>
+                    <option>Pekarna</option>
+                </select>
+                <button class="btn" @onclick="ApplyFilter">Filtruj</button>
+            </div>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Jméno</th>
+                        <th>Kategorie</th>
+                        <th>Cena</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (displayed != null)
+                    {
+                        @foreach (var p in displayed)
+                        {
+                            <tr>
+                                <td>@p.Name</td>
+                                <td>@p.Description</td>
+                                <td>@p.Price.ToString("0.00") Kč</td>
+                                <td>
+                                    <button class="btn ghost" @onclick="() => StartEdit(p)">Upravit</button>
+                                    <button class="btn" @onclick="() => DeleteProduct(p)">Smazat</button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+
+            <div style="margin-top:12px" class="note">Celkem: <strong>@TotalDisplay</strong></div>
+        </div>
+
+        <div style="margin-top:12px" class="card">
+            <h4>Prida produkt</h4>
+            <div style="display:flex;flex-direction:column;gap:8px">
+                <label class="label-misaligned">Nazev</label>
+                <input class="input" @bind="newName" />
+
+                <label>Kategorie</label>
+                <input class="input" @bind="newCategory" />
+
+                <label>Popis</label>
+                <input class="input" @bind="newDescription" />
+
+                <label>Cena</label>
+                <input class="input" type="number" @bind="newPrice" />
+
+                <div style="display:flex; gap:8px">
+                    <button class="btn" @onclick="AddProduct">Pridat</button>
+                    <button class="btn ghost" @onclick="ClearForm">Vymazat</button>
+                </div>
+
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="bad">@errorMessage</div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <div class="card">
+            <h4>Detaily / Uprava</h4>
+            @if (editing != null)
+            {
+                <div style="display:flex;flex-direction:column;gap:8px">
+                    <label>Nazev</label>
+                    <input class="input" @bind="editing.Name" />
+                    <label>Kategorie</label>
+                    <input class="input" @bind="editing.Category" />
+                    <label>Cena</label>
+                    <input class="input" type="number" @bind="editing.Price" />
+                    <div style="display:flex; gap:8px">
+                        <button class="btn" @onclick="SaveEdit">Ulozit</button>
+                        <button class="btn ghost" @onclick="CancelEdit">Zrusit</button>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="note">Vyberte produkt pro upravu</div>
+            }
+        </div>
+
+        
+    </div>
+</div>
+
+@code{
+    private List<MiniWarehouse.Models.Product> displayed = new();
+    private string searchTerm = string.Empty;
+    private string filterCategory = string.Empty;
+
+
+
+    private string newName = string.Empty;
+    private string newCategory = string.Empty;
+    private string newDescription = string.Empty;
+    private decimal newPrice = 0m;
+    private string errorMessage = string.Empty;
+
+
+
+    private MiniWarehouse.Models.Product editing;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var all = await ProductService.GetAllAsync();
+        displayed = all;
+    }
+
+
+    private void ApplyFilter()
+    {
+
+        var all = ProductService.GetAllAsync().Result;
+
+
+        var list = all.Where(p =>
+        (string.IsNullOrEmpty(searchTerm) || p.Name.Contains(searchTerm)) &&
+        (string.IsNullOrEmpty(filterCategory) || p.Category.Contains(filterCategory))
+        ).ToList();
+
+
+        displayed = list;
+    }
+
+    private async Task AddProduct()
+    {
+        errorMessage = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(newName))
+        {
+            errorMessage = "Nazev nemuze byt prazdny";
+
+        }
+
+
+        if (newPrice < 0)
+        {
+            errorMessage = "Cena nemuze byt zaporna";
+        }
+
+
+        var p = new MiniWarehouse.Models.Product
+        {
+            Name = newName,
+            Category = newCategory,
+            Description = newDescription,
+            Price = newPrice
+        };
+
+
+        await ProductService.AddAsync(p);
+
+
+
+        newName = string.Empty; newCategory = string.Empty; newDescription = string.Empty; newPrice = 0m;
+
+
+
+        var all = await ProductService.GetAllAsync();
+        displayed = all;
+
+    }
+
+
+    private async Task DeleteProduct(MiniWarehouse.Models.Product p)
+    {
+
+        var all = await ProductService.GetAllAsync();
+        var index = all.FindIndex(x => x.Id == p.Id);
+        if (index >= 0)
+        {
+            await ProductService.RemoveByIndexAsync(index);
+            displayed = await ProductService.GetAllAsync();
+        }
+    }
+
+    private void StartEdit(MiniWarehouse.Models.Product p)
+    {
+
+        editing = p; 
+    }
+
+
+    private async Task SaveEdit()
+    {
+        if (editing == null) return;
+
+
+
+        await ProductService.UpdateAsync(editing.Id, editing);
+
+
+        editing = null;
+        displayed = await ProductService.GetAllAsync();
+    }
+
+
+    private void CancelEdit()
+    {
+        editing = null;
+    }
+
+
+    private void ClearForm()
+    {
+        newName = string.Empty; newCategory = string.Empty; newDescription = string.Empty; newPrice = 0m;
+        errorMessage = string.Empty;
+    }
+
+ 
+    private string TotalDisplay
+    {
+        get
+        {
+            var all = displayed ?? new List<MiniWarehouse.Models.Product>();
+
+            decimal total = all.Sum(x => x.Price) * 1.21m * 1.21m;
+            return total.ToString("0.00") + " Kč";
+        }
+    }
+      
+}  

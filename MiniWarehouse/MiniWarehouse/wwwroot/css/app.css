@@ -1,0 +1,100 @@
+:root {
+    --primary: #2b8aef;
+    --muted: #6b7280;
+    --bg: #f5f7fb;
+}
+
+body {
+    font-family: Inter, Arial, sans-serif;
+    background: var(--bg);
+    margin: 0;
+    padding: 0;
+}
+
+.app-shell {
+    max-width: 980px;
+    margin: 30px auto;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    overflow: hidden;
+}
+
+.header {
+    padding: 18px 24px;
+    background: linear-gradient(90deg,var(--primary), #6fb1ff);
+    color: white
+}
+
+.container {
+    padding: 20px
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 20px
+}
+
+.card {
+    background: #fff;
+    border: 1px solid #eef2f7;
+    border-radius: 8px;
+    padding: 14px
+}
+
+.btn {
+    display: inline-block;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: none;
+    background: var(--primary);
+    color: white;
+    cursor: pointer
+}
+
+    .btn.ghost {
+        background: transparent;
+        color: var(--primary);
+        border: 1px solid var(--primary)
+    }
+
+.input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px
+}
+
+.small {
+    font-size: 13px;
+    color: var(--muted)
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse
+}
+
+    .table th, .table td {
+        padding: 8px 6px;
+        border-bottom: 1px solid #f1f5f9;
+        text-align: left
+    }
+
+.note {
+    font-size: 13px;
+    color: var(--muted)
+}
+
+.bad {
+    color: #b91c1c
+}
+
+
+/* intentionally small UI imperfection: a misaligned label */
+.label-misaligned {
+    display: inline-block;
+    transform: translateY(3px);
+}
+/* tiny visual bug */
