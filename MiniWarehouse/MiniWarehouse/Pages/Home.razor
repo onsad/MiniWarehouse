@@ -9,7 +9,7 @@
             <h3>Produkty</h3>
 
             <div style="display:flex; gap:8px; margin-bottom:8px; align-items:center">
-                <input class="input" placeholder="Hledej podle nazev" @bind="searchTerm" />
+                <input class="input" placeholder="Hledej podle nazvu" @bind="searchTerm" />
                 <select class="input" style="width:160px" @bind="filterCategory">
                     <option value="">Všechny kategorie</option>
                     <option>Ovoce</option>
@@ -51,7 +51,7 @@
         </div>
 
         <div style="margin-top:12px" class="card">
-            <h4>Prida produkt</h4>
+            <h4>Pridat produkt</h4>
             <div style="display:flex;flex-direction:column;gap:8px">
                 <label class="label-misaligned">Nazev</label>
                 <input class="input" @bind="newName" />
@@ -121,7 +121,7 @@
 
 
 
-    private MiniWarehouse.Models.Product editing;
+    private MiniWarehouse.Models.Product? editing;
 
 
     protected override async Task OnInitializedAsync()
@@ -154,12 +154,16 @@
         {
             errorMessage = "Nazev nemuze byt prazdny";
 
+            return;
+
         }
 
 
         if (newPrice < 0)
         {
             errorMessage = "Cena nemuze byt zaporna";
+
+            return;
         }
 
 
@@ -238,7 +242,7 @@
         {
             var all = displayed ?? new List<MiniWarehouse.Models.Product>();
 
-            decimal total = all.Sum(x => x.Price) * 1.21m * 1.21m;
+            decimal total = all.Sum(x => x.Price);
             return total.ToString("0.00") + " Kč";
         }
     }

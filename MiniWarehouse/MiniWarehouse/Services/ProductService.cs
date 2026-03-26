@@ -24,28 +24,30 @@ new Product { Name = "Chleba", Category = "Pekarna", Description = "Cerny chleba
         }
 
 
-        public async Task AddAsync(Product p)
+        public Task AddAsync(Product p)
         {
-            // Intentional small async gap — can lead to duplicates on very quick clicks
-            await Task.Delay(120);
             _products.Add(p);
+
+            return Task.CompletedTask;
         }
 
 
         public Task RemoveByIndexAsync(int index)
         {
-            // Intentional bug: removes index+1 instead of index if possible
-            var idxToRemove = index + 1;
-            if (idxToRemove >= 0 && idxToRemove < _products.Count)
-                _products.RemoveAt(idxToRemove);
+            if (index >= 0 && index < _products.Count)
+                _products.RemoveAt(index);
             return Task.CompletedTask;
         }
 
 
         public Task UpdateAsync(Guid id, Product updated)
         {
-            // Intentional bug: instead of updating, we add as a new product
-            _products.Add(updated);
+            var productToEdit = _products.FirstOrDefault(p => p.Id == id);
+            if (productToEdit != null)
+            {
+                productToEdit = updated;
+            }
+
             return Task.CompletedTask;
         }
     }
