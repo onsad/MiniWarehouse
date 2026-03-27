@@ -1,0 +1,6 @@
+@MiniWarehouse.Server_HostAddress = http://localhost:5290
+
+GET {{MiniWarehouse.Server_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

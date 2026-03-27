@@ -23,6 +23,17 @@ new Product { Name = "Chleba", Category = categoryService.GetCategoryByName("Pek
             return Task.FromResult(_products.ToList());
         }
 
+        public Task<Product> GetProductByIdAsync(Guid guid)
+        {
+            var product = _products.FirstOrDefault(p => p.Id == guid);
+            if (product != null)
+            {
+                return Task.FromResult(product);
+            }
+            
+            return Task.FromResult<Product>(null);
+        }
+
 
         public Task AddAsync(Product p)
         {
