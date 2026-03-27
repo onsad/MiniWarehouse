@@ -5,15 +5,15 @@ using MiniWarehouse.Models;
 
 namespace MiniWarehouse.Services
 {
-    public class ProductService
+    public class ProductService(CategoryService categoryService)
     {
         // In-memory storage
         private readonly List<Product> _products = new()
 {
-new Product { Name = "Jablko", Category = "Ovoce", Description = "Cerstve cervene jablko", Price = 10.5m },
-new Product { Name = "Banán", Category = "Ovoce", Description = "Zraly banan", Price = 8.9m },
-new Product { Name = "Mléko", Category = "Napoje", Description = "1L polotucne", Price = 25m },
-new Product { Name = "Chleba", Category = "Pekarna", Description = "Cerny chleba", Price = 30m }
+new Product { Name = "Jablko", Category = categoryService.GetCategoryByName("Ovoce").Result, Description = "Cerstve cervene jablko", Price = 10.5m },
+new Product { Name = "Banán", Category = categoryService.GetCategoryByName("Ovoce").Result, Description = "Zraly banan", Price = 8.9m },
+new Product { Name = "Mléko", Category = categoryService.GetCategoryByName("Napoje").Result, Description = "1L polotucne", Price = 25m },
+new Product { Name = "Chleba", Category = categoryService.GetCategoryByName("Pekarna").Result, Description = "Cerny chleba", Price = 30m }
 };
 
 

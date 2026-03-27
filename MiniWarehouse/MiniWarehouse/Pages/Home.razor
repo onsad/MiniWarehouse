@@ -1,5 +1,6 @@
 ﻿@page "/"
 @inject MiniWarehouse.Services.ProductService ProductService
+@inject MiniWarehouse.Services.CategoryService CategoryService
 
 <NavMenu />
 
@@ -12,9 +13,13 @@
                 <input class="input" placeholder="Hledej podle nazvu" @bind="searchTerm" />
                 <select class="input" style="width:160px" @bind="filterCategory">
                     <option value="">Všechny kategorie</option>
-                    <option>Ovoce</option>
-                    <option>Napoje</option>
-                    <option>Pekarna</option>
+                    @if (categories.Any())
+                    {
+                        @foreach (var cat in categories)
+                        {
+                            <option>@cat.Name</option>
+                        }
+                    }
                 </select>
                 <button class="btn" @onclick="ApplyFilter">Filtruj</button>
             </div>
@@ -87,7 +92,7 @@
                     <label>Nazev</label>
                     <input class="input" @bind="editing.Name" />
                     <label>Kategorie</label>
-                    <input class="input" @bind="editing.Category" />
+                    <input class="input" @bind="editing.Category.Name" />
                     <label>Cena</label>
                     <input class="input" type="number" @bind="editing.Price" />
                     <div style="display:flex; gap:8px">
@@ -108,6 +113,7 @@
 
 @code{
     private List<MiniWarehouse.Models.Product> displayed = new();
+    private List<MiniWarehouse.Models.Category> categories = new();
     private string searchTerm = string.Empty;
     private string filterCategory = string.Empty;
 
@@ -127,6 +133,8 @@
     protected override async Task OnInitializedAsync()
     {
         var all = await ProductService.GetAllAsync();
+        categories = await CategoryService.GetAllAsync();
+
         displayed = all;
     }
 
@@ -136,10 +144,9 @@
 
         var all = ProductService.GetAllAsync().Result;
 
-
         var list = all.Where(p =>
         (string.IsNullOrEmpty(searchTerm) || p.Name.Contains(searchTerm)) &&
-        (string.IsNullOrEmpty(filterCategory) || p.Category.Contains(filterCategory))
+        (string.IsNullOrEmpty(filterCategory) || p.Category.Name.Contains(filterCategory))
         ).ToList();
 
 
@@ -166,11 +173,13 @@
             return;
         }
 
+        var prodCategory = await CategoryService.GetCategoryByName(newCategory);
+
 
         var p = new MiniWarehouse.Models.Product
         {
             Name = newName,
-            Category = newCategory,
+            Category = prodCategory,
             Description = newDescription,
             Price = newPrice
         };
@@ -178,11 +187,7 @@
 
         await ProductService.AddAsync(p);
 
-
-
         newName = string.Empty; newCategory = string.Empty; newDescription = string.Empty; newPrice = 0m;
-
-
 
         var all = await ProductService.GetAllAsync();
         displayed = all;
