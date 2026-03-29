@@ -25,7 +25,7 @@ namespace MiniWarehouse.Server.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Product>> CreateProduct(Product product)
+        public async Task<ActionResult<Product>> CreateProduct(ProductCreate product)
         {
             if (ModelState.IsValid)
             {

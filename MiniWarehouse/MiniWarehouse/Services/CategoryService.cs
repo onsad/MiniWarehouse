@@ -4,7 +4,7 @@ namespace MiniWarehouse.Services
 {
     public class CategoryService
     {
-        private readonly List<Category> _categories = new()
+        private readonly List<Category> categories = new()
         {
             new Category { Name = "Ovoce" },
             new Category { Name = "Napoje" },
@@ -13,13 +13,13 @@ namespace MiniWarehouse.Services
 
         public Task<List<Category>> GetAllAsync()
         {
-            var categories = _categories.ToList();
+            var categories = this.categories.ToList();
             return Task.FromResult(categories);
         }   
 
         public Task<Category> GetCategoryByName(string name)
         {
-            var category = _categories.FirstOrDefault(c => c.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+            var category = categories.FirstOrDefault(c => c.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
 
             if (category != null)
             {
@@ -27,8 +27,35 @@ namespace MiniWarehouse.Services
             }
             else
             {
-                throw new KeyNotFoundException($"Kategorie s názvem '{name}' nebyla nalezena.");
+                return Task.FromResult<Category>(null);
             }
-        }   
+        }
+
+        public Task<Category> GetCategoryById(Guid guid)
+        {
+            var category = categories.FirstOrDefault(c => c.Id == guid);
+
+            if (category != null)
+            {
+                return Task.FromResult(category);
+            }
+            else
+            {
+                return Task.FromResult<Category>(null);
+            }
+        }
+
+        public Task AddCategoryAsync(Category category)
+        {
+            categories.Add(category);
+
+            return Task.CompletedTask;
+        }
+
+        // Check whether a category with the given id exists
+        public bool Exists(Guid id)
+        {
+            return categories.Any(c => c.Id == id);
+        }
     }
 }

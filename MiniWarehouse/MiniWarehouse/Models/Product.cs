@@ -5,7 +5,6 @@ namespace MiniWarehouse.Models
 {
     public class Product
     {
-        [JsonIgnore]
         public Guid Id { get; set; } = Guid.NewGuid();
 
         [Required]
