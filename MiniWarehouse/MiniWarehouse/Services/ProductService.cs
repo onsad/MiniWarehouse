@@ -79,15 +79,76 @@ namespace MiniWarehouse.Services
         }
 
 
+        // Check whether a product with the given id exists
+        public bool Exists(Guid id)
+        {
+            return _products.Any(p => p.Id == id);
+        }
+
+        // Update product by mapping fields from ProductCreate
+        public Task<bool> UpdateAsync(Guid id, ProductCreate updated)
+        {
+            var productToEdit = _products.FirstOrDefault(p => p.Id == id);
+            if (productToEdit == null)
+                return Task.FromResult(false);
+
+            var category = _categoryService.GetCategoryById(updated.CategoryId).Result;
+            if (category == null)
+                return Task.FromResult(false);
+
+            productToEdit.Name = updated.Name;
+            productToEdit.Category = category;
+            productToEdit.Description = updated.Description;
+            productToEdit.Price = updated.Price;
+
+            return Task.FromResult(true);
+        }
+
+        public Task<bool> DeleteAsync(Guid id)
+        {
+            var existing = _products.FirstOrDefault(p => p.Id == id);
+            if (existing == null)
+                return Task.FromResult(false);
+
+            _products.Remove(existing);
+            return Task.FromResult(true);
+        }
+
+        // Overload used by UI code that passes a full Product instance
         public Task UpdateAsync(Guid id, Product updated)
         {
             var productToEdit = _products.FirstOrDefault(p => p.Id == id);
             if (productToEdit != null)
             {
-                productToEdit = updated;
+                productToEdit.Name = updated.Name;
+                productToEdit.Category = updated.Category;
+                productToEdit.Description = updated.Description;
+                productToEdit.Price = updated.Price;
             }
 
             return Task.CompletedTask;
+        }
+
+        public Task<List<Product>> SearchProductsAsync(ProductSearch productSearch)
+        {
+            var query = _products;
+
+            if (!string.IsNullOrEmpty(productSearch.ProductName))
+            {
+                query = query.Where(p => p.Name.Contains(productSearch.ProductName)).ToList();
+            }
+
+            if (!string.IsNullOrEmpty(productSearch.Description))
+            {
+                query = query.Where(p => p.Description.Contains(productSearch.Description)).ToList();
+            }
+
+            if (!string.IsNullOrEmpty(productSearch.CategoryName))
+            {
+                query = query.Where(p => p.Category.Name.Contains(productSearch.CategoryName)).ToList();
+            }
+
+            return Task.FromResult(query.ToList());
         }
     }
 }

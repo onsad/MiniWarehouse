@@ -36,5 +36,41 @@ namespace MiniWarehouse.Server.Controllers
 
             return BadRequest(ModelState);
         }
+
+        [HttpPut("{id:guid}")]
+        public async Task<IActionResult> UpdateProduct(Guid id, ProductCreate product)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            if (!productService.Exists(id))
+                return NotFound();
+
+            var updated = await productService.UpdateAsync(id, product);
+            if (!updated)
+                return NotFound();
+
+            return NoContent();
+        }
+
+        [HttpDelete("{id:guid}")]
+        public async Task<IActionResult> DeleteProduct(Guid id)
+        {
+            if (!productService.Exists(id))
+                return NotFound();
+
+            var deleted = await productService.DeleteAsync(id);
+            if (!deleted)
+                return NotFound();
+
+            return NoContent();
+        }
+
+        [HttpGet("search", Name = "SearchProducts")]
+        public async Task<ActionResult<List<Product>>> SearchAllProducts([FromQuery] ProductSearch productSearch)
+        {
+            var products = await productService.SearchProductsAsync(productSearch);
+            return Ok(products);
+        }
     }
 }

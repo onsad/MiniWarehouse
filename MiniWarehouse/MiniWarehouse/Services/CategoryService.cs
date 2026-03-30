@@ -57,5 +57,28 @@ namespace MiniWarehouse.Services
         {
             return categories.Any(c => c.Id == id);
         }
+
+        public Task<bool> UpdateCategoryAsync(Guid id, Category category)
+        {
+            var existing = categories.FirstOrDefault(c => c.Id == id);
+            if (existing == null)
+                return Task.FromResult(false);
+
+            // Update properties
+            existing.Name = category.Name;
+
+            return Task.FromResult(true);
+        }
+
+        public Task<bool> DeleteCategoryAsync(Guid id)
+        {
+            var existing = categories.FirstOrDefault(c => c.Id == id);
+            if (existing == null)
+                return Task.FromResult(false);
+
+            categories.Remove(existing);
+
+            return Task.FromResult(true);
+        }
     }
 }
