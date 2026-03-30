@@ -1,0 +1,8 @@
+# For more info on HTTP files go to https://aka.ms/vs/httpfile
+
+@hostname = localhost
+@port = 7057
+@host = {{hostname}}:{{port}}
+@contentType = application/json
+
+GET https://{{host}}/api/product
