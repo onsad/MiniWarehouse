@@ -98,3 +98,16 @@ body {
     transform: translateY(3px);
 }
 /* tiny visual bug */
+
+.validation-message {
+    color: red;
+    font-size: 0.9rem;
+}
+
+.validation-summary-errors {
+    color: red;
+}
+
+.input.invalid {
+    border: 1px solid red;
+}

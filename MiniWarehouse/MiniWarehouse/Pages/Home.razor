@@ -1,6 +1,9 @@
 ﻿@page "/"
+@using MiniWarehouse.Helpers
+@using MiniWarehouse.Models
 @inject MiniWarehouse.Services.ProductService ProductService
-@inject MiniWarehouse.Services.CategoryService CategoryService
+
+@inject HttpClient HttpClient
 
 <NavMenu />
 
@@ -14,11 +17,11 @@
 
                 @if (categories.Any())
                 {
-                    <InputSelect class="input" style="width:160px" @bind-Value="SelectedCategory.Id">
-                        <option value="@Guid.Empty">Všechny kategorie</option>
+                    <InputSelect class="input" style="width:160px" @bind-Value="SelectedCategory.Name">
+                        <option value="">Všechny kategorie</option>
                         @foreach (var category in categories)
                         {
-                            <option value="@category.Id">
+                            <option value="@category.Name">
                                 @category.Name
                             </option>
                         }
@@ -66,8 +69,8 @@
                 <ValidationSummary />
                 <div style="display:flex;flex-direction:column;gap:8px">
                     <label class="label-misaligned">Nazev</label>
-                    <input class="input" @bind="productCreate.Name" />
-                    <ValidationMessage For="@(() => productCreate.Name)" />
+                    <InputText class="input" @bind-Value="productCreate.Name" />
+                    <ValidationMessage class="validation-message" For="@(() => productCreate.Name)" />
 
                     <label>Kategorie</label>
                     @if (categories.Any())
@@ -81,15 +84,15 @@
                             }
                         </InputSelect>
                     }
-                    <ValidationMessage For="@(() => productCreate.CategoryId)" />
+                    <ValidationMessage class="validation-message" For="@(() => productCreate.CategoryId)" />
 
                     <label>Popis</label>
-                    <input class="input" @bind="productCreate.Description" />
-                    <ValidationMessage For="@(() => productCreate.Description)" />
+                    <InputText class="input" @bind-Value="productCreate.Description" />
+                    <ValidationMessage class="validation-message" For="@(() => productCreate.Description)" />
 
                     <label>Cena</label>
-                    <InputNumber class="input" @bind-value="productCreate.Price" step="0.01" />
-                    <ValidationMessage For="@(() => productCreate.Price)" />
+                    <InputNumber class="input" @bind-Value="productCreate.Price" step="0.01" />
+                    <ValidationMessage class="validation-message" For="@(() => productCreate.Price)" />
 
                     <div style="display:flex; gap:8px">
                         <button class="btn" type="submit">Pridat</button>
@@ -163,24 +166,30 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var all = await ProductService.GetAllAsync();
-        categories = await CategoryService.GetAllAsync();
+        SelectedCategory.Id = Guid.Empty;
+        var all = await ApiHelpers.SafeGetAsync<Product>(HttpClient, "api/Product");
 
-        displayed = all;
+        var result = await ApiHelpers.SafeGetAsync<Category>(HttpClient, "api/category");
+
+        categories = result.Data;
+
+        displayed = all.Data;
     }
 
 
-    private void ApplyFilter()
+    private async Task ApplyFilter()
     {
+        var search = new ProductSearch()
+        {
+            ProductName = searchTerm,
+            CategoryName = SelectedCategory.Name
+        };
 
-        var all = ProductService.GetAllAsync().Result;
+        var searchQuery = ApiHelpers.BuildSearchQuery(search);
 
-        var list = all.Where(p =>
-        (string.IsNullOrEmpty(searchTerm) || p.Name.Contains(searchTerm)) &&
-        (SelectedCategory.Id == Guid.Empty || p.Category.Id == SelectedCategory.Id)
-        ).ToList();
+        var searchedProdut = await ApiHelpers.SafeGetAsync<Product>(HttpClient, $"api/Product/search?{searchQuery}");
 
-        displayed = list;
+        displayed = searchedProdut.Data;
     }
 
     private async Task CreateProductSubmit()
