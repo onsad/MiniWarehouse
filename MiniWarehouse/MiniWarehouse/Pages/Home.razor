@@ -11,16 +11,19 @@
 
             <div style="display:flex; gap:8px; margin-bottom:8px; align-items:center">
                 <input class="input" placeholder="Hledej podle nazvu" @bind="searchTerm" />
-                <select class="input" style="width:160px" @bind="filterCategory">
-                    <option value="">Všechny kategorie</option>
-                    @if (categories.Any())
-                    {
-                        @foreach (var cat in categories)
+
+                @if (categories.Any())
+                {
+                    <InputSelect class="input" style="width:160px" @bind-Value="SelectedCategory.Id">
+                        <option value="@Guid.Empty">Všechny kategorie</option>
+                        @foreach (var category in categories)
                         {
-                            <option>@cat.Name</option>
+                            <option value="@category.Id">
+                                @category.Name
+                            </option>
                         }
-                    }
-                </select>
+                    </InputSelect>
+                }
                 <button class="btn" @onclick="ApplyFilter">Filtruj</button>
             </div>
 
@@ -114,11 +117,9 @@
 @code{
     private List<MiniWarehouse.Models.Product> displayed = new();
     private List<MiniWarehouse.Models.Category> categories = new();
+    private MiniWarehouse.Models.Category SelectedCategory = new();
     private string searchTerm = string.Empty;
-    private string filterCategory = string.Empty;
-
-
-
+  
     private string newName = string.Empty;
     private string newCategory = string.Empty;
     private string newDescription = string.Empty;
@@ -146,9 +147,8 @@
 
         var list = all.Where(p =>
         (string.IsNullOrEmpty(searchTerm) || p.Name.Contains(searchTerm)) &&
-        (string.IsNullOrEmpty(filterCategory) || p.Category.Name.Contains(filterCategory))
+        (SelectedCategory.Id == Guid.Empty || p.Category.Id == SelectedCategory.Id)
         ).ToList();
-
 
         displayed = list;
     }
