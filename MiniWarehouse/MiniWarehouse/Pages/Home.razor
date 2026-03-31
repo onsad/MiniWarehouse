@@ -60,49 +60,87 @@
 
         <div style="margin-top:12px" class="card">
             <h4>Pridat produkt</h4>
-            <div style="display:flex;flex-direction:column;gap:8px">
-                <label class="label-misaligned">Nazev</label>
-                <input class="input" @bind="newName" />
 
-                <label>Kategorie</label>
-                <input class="input" @bind="newCategory" />
+            <EditForm Model="@productCreate" OnValidSubmit="@CreateProductSubmit">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <div style="display:flex;flex-direction:column;gap:8px">
+                    <label class="label-misaligned">Nazev</label>
+                    <input class="input" @bind="productCreate.Name" />
+                    <ValidationMessage For="@(() => productCreate.Name)" />
 
-                <label>Popis</label>
-                <input class="input" @bind="newDescription" />
+                    <label>Kategorie</label>
+                    @if (categories.Any())
+                    {
+                        <InputSelect class="input" @bind-Value="productCreate.CategoryId">
+                            @foreach (var category in categories)
+                            {
+                                <option value="@category.Id">
+                                    @category.Name
+                                </option>
+                            }
+                        </InputSelect>
+                    }
+                    <ValidationMessage For="@(() => productCreate.CategoryId)" />
 
-                <label>Cena</label>
-                <input class="input" type="number" @bind="newPrice" />
+                    <label>Popis</label>
+                    <input class="input" @bind="productCreate.Description" />
+                    <ValidationMessage For="@(() => productCreate.Description)" />
 
-                <div style="display:flex; gap:8px">
-                    <button class="btn" @onclick="AddProduct">Pridat</button>
-                    <button class="btn ghost" @onclick="ClearForm">Vymazat</button>
+                    <label>Cena</label>
+                    <InputNumber class="input" @bind-value="productCreate.Price" step="0.01" />
+                    <ValidationMessage For="@(() => productCreate.Price)" />
+
+                    <div style="display:flex; gap:8px">
+                        <button class="btn" type="submit">Pridat</button>
+                        <button class="btn ghost" @onclick="ClearForm">Vymazat</button>
+                    </div>
                 </div>
-
-                @if (!string.IsNullOrEmpty(errorMessage))
-                {
-                    <div class="bad">@errorMessage</div>
-                }
-            </div>
+            </EditForm>
         </div>
     </div>
 
     <div>
         <div class="card">
             <h4>Detaily / Uprava</h4>
-            @if (editing != null)
+            @if (productEdit != null)
             {
-                <div style="display:flex;flex-direction:column;gap:8px">
-                    <label>Nazev</label>
-                    <input class="input" @bind="editing.Name" />
-                    <label>Kategorie</label>
-                    <input class="input" @bind="editing.Category.Name" />
-                    <label>Cena</label>
-                    <input class="input" type="number" @bind="editing.Price" />
-                    <div style="display:flex; gap:8px">
-                        <button class="btn" @onclick="SaveEdit">Ulozit</button>
-                        <button class="btn ghost" @onclick="CancelEdit">Zrusit</button>
+                <EditForm Model="@productEdit" OnValidSubmit="@EditProductSubmit">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                    <div style="display:flex;flex-direction:column;gap:8px">
+                        <label>Nazev</label>
+                        <input class="input" @bind="productEdit.Name" />
+
+                        <label>Kategorie</label>
+                        @if (categories.Any())
+                        {
+                            <InputSelect class="input" @bind-Value="productEdit.CategoryId">
+                                @foreach (var category in categories)
+                                {
+                                    <option value="@category.Id">
+                                        @category.Name
+                                    </option>
+                                }
+                            </InputSelect>
+                        }
+                        <ValidationMessage For="@(() => productEdit.CategoryId)" />
+
+                        <label>Popis</label>
+                        <input class="input" @bind="productEdit.Description" />
+                        <ValidationMessage For="@(() => productEdit.Description)" />
+
+                        <label>Cena</label>
+                        <InputNumber class="input" @bind-value="productEdit.Price" step="0.01" />
+                        <ValidationMessage For="@(() => productEdit.Price)" />
+
+                        <div style="display:flex; gap:8px">
+                            <button class="btn" type="submit">Ulozit</button>
+                            <button class="btn ghost" @onclick="CancelEdit">Zrusit</button>
+                        </div>
                     </div>
-                </div>
+
+                </EditForm>
             }
             else
             {
@@ -118,18 +156,10 @@
     private List<MiniWarehouse.Models.Product> displayed = new();
     private List<MiniWarehouse.Models.Category> categories = new();
     private MiniWarehouse.Models.Category SelectedCategory = new();
+    private MiniWarehouse.Models.ProductCreate productCreate = new();
+    private MiniWarehouse.Models.ProductCreate? productEdit = null;
+
     private string searchTerm = string.Empty;
-  
-    private string newName = string.Empty;
-    private string newCategory = string.Empty;
-    private string newDescription = string.Empty;
-    private decimal newPrice = 0m;
-    private string errorMessage = string.Empty;
-
-
-
-    private MiniWarehouse.Models.Product? editing;
-
 
     protected override async Task OnInitializedAsync()
     {
@@ -153,47 +183,15 @@
         displayed = list;
     }
 
-    private async Task AddProduct()
+    private async Task CreateProductSubmit()
     {
-        errorMessage = string.Empty;
+        await ProductService.AddAsync(productCreate);
 
-        if (string.IsNullOrWhiteSpace(newName))
-        {
-            errorMessage = "Nazev nemuze byt prazdny";
-
-            return;
-
-        }
-
-
-        if (newPrice < 0)
-        {
-            errorMessage = "Cena nemuze byt zaporna";
-
-            return;
-        }
-
-        var prodCategory = await CategoryService.GetCategoryByName(newCategory);
-
-
-        var p = new MiniWarehouse.Models.Product
-        {
-            Name = newName,
-            Category = prodCategory,
-            Description = newDescription,
-            Price = newPrice
-        };
-
-
-        await ProductService.AddAsync(p);
-
-        newName = string.Empty; newCategory = string.Empty; newDescription = string.Empty; newPrice = 0m;
+        productCreate = new();
 
         var all = await ProductService.GetAllAsync();
         displayed = all;
-
-    }
-
+    }   
 
     private async Task DeleteProduct(MiniWarehouse.Models.Product p)
     {
@@ -209,35 +207,37 @@
 
     private void StartEdit(MiniWarehouse.Models.Product p)
     {
-
-        editing = p; 
+        productEdit = new()
+        {
+            Id = p.Id,
+            Name = p.Name,
+            CategoryId = p.Category.Id,
+            Description = p.Description,
+            Price = p.Price
+        };
     }
 
 
-    private async Task SaveEdit()
+    private async Task EditProductSubmit()
     {
-        if (editing == null) return;
+        if (productEdit == null) return;
 
+        await ProductService.UpdateAsync(productEdit.Id, productEdit);
 
-
-        await ProductService.UpdateAsync(editing.Id, editing);
-
-
-        editing = null;
+        productEdit = null;
         displayed = await ProductService.GetAllAsync();
     }
 
 
     private void CancelEdit()
     {
-        editing = null;
+        productEdit = null;
     }
 
 
     private void ClearForm()
     {
-        newName = string.Empty; newCategory = string.Empty; newDescription = string.Empty; newPrice = 0m;
-        errorMessage = string.Empty;
+        productCreate = new();
     }
 
  
