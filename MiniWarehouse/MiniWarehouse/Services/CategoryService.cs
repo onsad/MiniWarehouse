@@ -34,10 +34,9 @@ namespace MiniWarehouse.Services
             return Task.CompletedTask;
         }
 
-        // Check whether a category with the given id exists
-        public bool Exists(Guid id)
+        public Task<bool> ExistsAsync(Guid id)
         {
-            return categories.Any(c => c.Id == id);
+            return Task.FromResult(categories.Any(c => c.Id == id));
         }
 
         public Task<bool> UpdateCategoryAsync(Guid id, Category category)

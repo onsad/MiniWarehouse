@@ -55,7 +55,9 @@ namespace MiniWarehouse.Server.Controllers
             // Ensure the incoming model has the requested id
             category.Id = id;
 
-            if (!categoryService.Exists(id))
+            var existed = await categoryService.ExistsAsync(id);
+
+            if (!existed)
                 return NotFound();
 
             var updated = await categoryService.UpdateCategoryAsync(id, category);
@@ -68,7 +70,9 @@ namespace MiniWarehouse.Server.Controllers
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> DeleteCategory(Guid id)
         {
-            if (!categoryService.Exists(id))
+            var existed = await categoryService.ExistsAsync(id);
+
+            if (!existed)
                 return NotFound();
 
             var deleted = await categoryService.DeleteCategoryAsync(id);

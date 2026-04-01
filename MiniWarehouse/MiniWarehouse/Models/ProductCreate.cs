@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using MiniWarehouse.Services;
 
 namespace MiniWarehouse.Models
 {
@@ -28,19 +27,6 @@ namespace MiniWarehouse.Models
             {
                 yield return new ValidationResult("Category is required.", new[] { nameof(CategoryId) });
                 yield break;
-            }
-
-            // Try to resolve CategoryService from DI container
-            var categoryService = validationContext.GetRequiredService<CategoryService>();
-            if (categoryService == null)
-            {
-                // If service not available, skip existence check (or optionally return an error)
-                yield break;
-            }
-
-            if (!categoryService.Exists(CategoryId))
-            {
-                yield return new ValidationResult("Category does not exist.", new[] { nameof(CategoryId) });
             }
         }
     }

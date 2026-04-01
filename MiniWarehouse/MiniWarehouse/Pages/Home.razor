@@ -159,24 +159,23 @@
             <h4>Detaily / Uprava kategorie</h4>
             @if (categories.Any())
             {
-                <div style="display:flex;flex-direction:column;gap:8px">
-                <label>Kategorie</label>
-                @if (categories.Any())
-                {
-                    <InputSelect class="input" @bind-Value="categoryCreate.Id">
-                        @foreach (var category in categories)
-                        {
-                            <option value="@category.Id">
-                                @category.Name
-                            </option>
-                        }
-                    </InputSelect>
-                }
-
                 <EditForm Model="@categoryCreate" OnValidSubmit="@EditCategorySubmit">
                     <DataAnnotationsValidator />
                     <ValidationSummary />
-                    
+                    <div style="display:flex;flex-direction:column;gap:8px">
+                        <label>Kategorie</label>
+                        @if (categories.Any())
+                        {
+                            <InputSelect class="input" @bind-Value="categoryCreate.Id">
+                                @foreach (var category in categories)
+                                {
+                                    <option value="@category.Id">
+                                        @category.Name
+                                    </option>
+                                }
+                            </InputSelect>
+                        }
+
                         <label>Nazev kategorie</label>
                         <input class="input" @bind="categoryCreate.Name" />
 
@@ -184,10 +183,8 @@
                             <button class="btn" type="submit">Přidat kategorii</button>
                             <button class="btn ghost" @onclick="CancelEdit">Zrusit</button>
                         </div>
-                    
-
+                    </div>
                 </EditForm>
-                </div>
             }
             else
             {
@@ -322,7 +319,18 @@
 
     private async Task EditCategorySubmit()
     {
-        
+        var createCategoryResponse = await ApiClient.PostAsync<Category, Category>("api/Category", categoryCreate);
+
+        if (!createCategoryResponse.Success)
+        {
+            errorMessage = createCategoryResponse.Error ?? "Neznámá chyba";
+            showErrorModal = true;
+
+        }
+
+        categoryCreate = new();
+
+        await LoadCategories();
     }
 
     private string TotalDisplay
