@@ -1,7 +1,8 @@
-using MiniWarehouse;
-using MiniWarehouse.Services;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using MiniWarehouse;
+using MiniWarehouse.ApiClient;
+using MiniWarehouse.Services;
 
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -12,6 +13,8 @@ builder.Services.AddScoped(sp => new HttpClient
 {
     BaseAddress = new Uri("https://localhost:7057/")
 });
+
+builder.Services.AddScoped<IApiClient, ApiClient>();
 
 
 builder.Services.AddSingleton<ProductService>();

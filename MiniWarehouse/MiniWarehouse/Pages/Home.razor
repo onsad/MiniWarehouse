@@ -1,11 +1,15 @@
 ﻿@page "/"
+@using MiniWarehouse.ApiClient
 @using MiniWarehouse.Helpers
 @using MiniWarehouse.Models
-@inject MiniWarehouse.Services.ProductService ProductService
 
-@inject HttpClient HttpClient
+@inject IApiClient ApiClient
 
 <NavMenu />
+
+<ErrorModal IsVisible="@showErrorModal"
+            Message="@errorMessage"
+            OnClose="@CloseErrorModal" />
 
 <div class="grid">
     <div>
@@ -164,16 +168,15 @@
 
     private string searchTerm = string.Empty;
 
+    private bool showErrorModal = false;
+    private string? errorMessage;
+
     protected override async Task OnInitializedAsync()
     {
         SelectedCategory.Id = Guid.Empty;
-        var all = await ApiHelpers.SafeGetAsync<Product>(HttpClient, "api/Product");
-
-        var result = await ApiHelpers.SafeGetAsync<Category>(HttpClient, "api/category");
-
-        categories = result.Data;
-
-        displayed = all.Data;
+        
+        await LoadCategories();
+        await LoadProducts();
     }
 
 
@@ -187,31 +190,47 @@
 
         var searchQuery = ApiHelpers.BuildSearchQuery(search);
 
-        var searchedProdut = await ApiHelpers.SafeGetAsync<Product>(HttpClient, $"api/Product/search?{searchQuery}");
+        var searchedProducts = await ApiClient.GetAsync<Product>($"api/Product/search?{searchQuery}");
 
-        displayed = searchedProdut.Data;
+        if (searchedProducts.Success && searchedProducts.Data != null)
+        {
+            displayed = searchedProducts.Data;
+        }
+        else
+        {
+            errorMessage = searchedProducts.Error ?? "Neznámá chyba";
+            showErrorModal = true;
+        }
     }
 
     private async Task CreateProductSubmit()
     {
-        await ProductService.AddAsync(productCreate);
+        var createProductResponse = await ApiClient.PostAsync<ProductCreate, ProductCreate>("api/Product", productCreate);
+
+        if (!createProductResponse.Success)
+        {
+            errorMessage = createProductResponse.Error ?? "Neznámá chyba";
+            showErrorModal = true;
+
+        }
 
         productCreate = new();
 
-        var all = await ProductService.GetAllAsync();
-        displayed = all;
+        await LoadProducts();
     }   
 
     private async Task DeleteProduct(MiniWarehouse.Models.Product p)
     {
+        var deletedProducts = await ApiClient.DeleteAsync($"api/Product/{p.Id}");
 
-        var all = await ProductService.GetAllAsync();
-        var index = all.FindIndex(x => x.Id == p.Id);
-        if (index >= 0)
+        if (!deletedProducts.Success)
         {
-            await ProductService.RemoveByIndexAsync(index);
-            displayed = await ProductService.GetAllAsync();
+            errorMessage = deletedProducts.Error ?? "Neznámá chyba";
+            showErrorModal = true;
+
         }
+
+        await LoadProducts();
     }
 
     private void StartEdit(MiniWarehouse.Models.Product p)
@@ -231,10 +250,17 @@
     {
         if (productEdit == null) return;
 
-        await ProductService.UpdateAsync(productEdit.Id, productEdit);
+        var createProductResponse = await ApiClient.PutAsync<ProductCreate, ProductCreate>("api/Product", productCreate);
+
+        if (!createProductResponse.Success)
+        {
+            errorMessage = createProductResponse.Error ?? "Neznámá chyba";
+            showErrorModal = true;
+
+        }
 
         productEdit = null;
-        displayed = await ProductService.GetAllAsync();
+        await LoadProducts();
     }
 
 
@@ -249,7 +275,12 @@
         productCreate = new();
     }
 
- 
+    private void CloseErrorModal()
+    {
+        showErrorModal = false;
+    }
+
+
     private string TotalDisplay
     {
         get
@@ -260,5 +291,33 @@
             return total.ToString("0.00") + " Kč";
         }
     }
-      
+
+    private async Task LoadProducts()
+    {
+        var productsResult = await ApiClient.GetAsync<Product>("api/Product");
+        if (productsResult.Success && productsResult.Data != null)
+        {
+            displayed = productsResult.Data;
+        }
+        else
+        {
+            errorMessage = productsResult.Error ?? "Neznámá chyba";
+            showErrorModal = true;
+        }
+    }
+
+    private async Task LoadCategories()
+    {
+        var categoriesResult = await ApiClient.GetAsync<Category>("api/category");
+
+        if (categoriesResult.Success && categoriesResult.Data != null)
+        {
+            categories = categoriesResult.Data;
+        }
+        else
+        {
+            errorMessage = categoriesResult.Error ?? "Neznámá chyba";
+            showErrorModal = true;
+        }
+    }
 }  

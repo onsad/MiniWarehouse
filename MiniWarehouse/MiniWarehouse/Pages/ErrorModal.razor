@@ -1,0 +1,44 @@
+﻿@if (IsVisible)
+{
+    <div style="
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;"
+         @onclick="Close">
+
+        <div style="
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            min-width: 300px;
+            max-width: 400px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);"
+             @onclick:stopPropagation>
+
+            <h3 style="margin-top:0; color:#c0392b;">Chyba</h3>
+
+            <p style="margin: 12px 0;">
+                @Message
+            </p>
+
+            <div style="display:flex; justify-content:flex-end;">
+                <button class="btn" @onclick="Close">Zavřít</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public string? Message { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private async Task Close()
+    {
+        await OnClose.InvokeAsync();
+    }
+}

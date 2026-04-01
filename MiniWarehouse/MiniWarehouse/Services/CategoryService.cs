@@ -6,9 +6,9 @@ namespace MiniWarehouse.Services
     {
         private readonly List<Category> categories = new()
         {
-            new Category { Name = "Ovoce" },
-            new Category { Name = "Napoje" },
-            new Category { Name = "Pekarna" }
+            new Category { Id = new Guid("e3d9a8e2-1f9a-4b6a-9c3b-1b2d6a7c8e01"), Name = "Ovoce" },
+            new Category { Id = new Guid("d1f2a3b4-c5d6-4e7f-8123-4567890abcde"), Name = "Napoje" },
+            new Category { Id = new Guid("a0b1c2d3-e4f5-4711-9012-3456789abcde"), Name = "Pekarna" }
         };
 
         public Task<List<Category>> GetAllAsync()

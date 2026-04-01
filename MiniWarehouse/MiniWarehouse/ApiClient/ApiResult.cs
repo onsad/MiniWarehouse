@@ -1,4 +1,4 @@
-﻿namespace MiniWarehouse.Helpers
+﻿namespace MiniWarehouse.ApiClient
 {
     public class ApiResult<T>
     {
