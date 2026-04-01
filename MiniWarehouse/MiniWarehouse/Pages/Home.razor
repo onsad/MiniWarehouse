@@ -109,7 +109,7 @@
 
     <div>
         <div class="card">
-            <h4>Detaily / Uprava</h4>
+            <h4>Detaily / Uprava produktu</h4>
             @if (productEdit != null)
             {
                 <EditForm Model="@productEdit" OnValidSubmit="@EditProductSubmit">
@@ -155,6 +155,45 @@
             }
         </div>
 
+        <div class="card">
+            <h4>Detaily / Uprava kategorie</h4>
+            @if (categories.Any())
+            {
+                <div style="display:flex;flex-direction:column;gap:8px">
+                <label>Kategorie</label>
+                @if (categories.Any())
+                {
+                    <InputSelect class="input" @bind-Value="categoryCreate.Id">
+                        @foreach (var category in categories)
+                        {
+                            <option value="@category.Id">
+                                @category.Name
+                            </option>
+                        }
+                    </InputSelect>
+                }
+
+                <EditForm Model="@categoryCreate" OnValidSubmit="@EditCategorySubmit">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+                    
+                        <label>Nazev kategorie</label>
+                        <input class="input" @bind="categoryCreate.Name" />
+
+                        <div style="display:flex; gap:8px">
+                            <button class="btn" type="submit">Přidat kategorii</button>
+                            <button class="btn ghost" @onclick="CancelEdit">Zrusit</button>
+                        </div>
+                    
+
+                </EditForm>
+                </div>
+            }
+            else
+            {
+                <div class="note">Vyberte kategorii pro upravu</div>
+            }
+        </div>
         
     </div>
 </div>
@@ -165,6 +204,7 @@
     private MiniWarehouse.Models.Category SelectedCategory = new();
     private MiniWarehouse.Models.ProductCreate productCreate = new();
     private MiniWarehouse.Models.ProductCreate? productEdit = null;
+    private MiniWarehouse.Models.Category categoryCreate = new();
 
     private string searchTerm = string.Empty;
 
@@ -174,7 +214,7 @@
     protected override async Task OnInitializedAsync()
     {
         SelectedCategory.Id = Guid.Empty;
-        
+
         await LoadCategories();
         await LoadProducts();
     }
@@ -280,6 +320,10 @@
         showErrorModal = false;
     }
 
+    private async Task EditCategorySubmit()
+    {
+        
+    }
 
     private string TotalDisplay
     {

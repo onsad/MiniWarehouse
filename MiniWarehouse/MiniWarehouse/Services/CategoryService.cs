@@ -17,32 +17,14 @@ namespace MiniWarehouse.Services
             return Task.FromResult(categories);
         }   
 
-        public Task<Category> GetCategoryByName(string name)
+        public Task<Category?> GetCategoryByName(string name)
         {
-            var category = categories.FirstOrDefault(c => c.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
-
-            if (category != null)
-            {
-                return Task.FromResult(category);   
-            }
-            else
-            {
-                return Task.FromResult<Category>(null);
-            }
+            return Task.FromResult(categories.FirstOrDefault(c => c.Name.Equals(name, StringComparison.OrdinalIgnoreCase)));
         }
 
-        public Task<Category> GetCategoryById(Guid guid)
+        public Task<Category?> GetCategoryById(Guid guid)
         {
-            var category = categories.FirstOrDefault(c => c.Id == guid);
-
-            if (category != null)
-            {
-                return Task.FromResult(category);
-            }
-            else
-            {
-                return Task.FromResult<Category>(null);
-            }
+            return Task.FromResult(categories.FirstOrDefault(c => c.Id == guid));
         }
 
         public Task AddCategoryAsync(Category category)
