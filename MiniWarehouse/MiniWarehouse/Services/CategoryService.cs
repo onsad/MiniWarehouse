@@ -23,6 +23,7 @@ namespace MiniWarehouse.Services
 
         public Task AddCategoryAsync(Category category)
         {
+            category.Id = Guid.NewGuid();
             dataRepository.Categories.Add(category);
 
             return Task.CompletedTask;
@@ -39,7 +40,6 @@ namespace MiniWarehouse.Services
             if (existing == null)
                 return Task.FromResult(CategoryServiceResult.NotFound);
 
-            // Update properties
             existing.Name = category.Name;
 
             return Task.FromResult(CategoryServiceResult.Success);

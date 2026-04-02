@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using MiniWarehouse.Models;
 using MiniWarehouse.Services;
 
@@ -30,9 +29,14 @@ namespace MiniWarehouse.Server.Controllers
         {
             if (ModelState.IsValid)
             {
-                await productService.AddAsync(product);
+                var (result, created) = await productService.AddAsync(product);
 
-                return CreatedAtAction(nameof(GetProductById), new { id = product.Id }, product);
+                return result switch
+                {
+                    ProductServiceResult.CategoryNotFound => BadRequest("Category not found."),
+                    ProductServiceResult.Success => CreatedAtAction(nameof(GetProductById), new { id = created!.Id }, created),
+                    _ => NoContent()
+                };
             }
 
             return BadRequest(ModelState);

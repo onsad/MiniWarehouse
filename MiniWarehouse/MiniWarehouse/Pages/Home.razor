@@ -1,9 +1,8 @@
 ﻿@page "/"
-@using MiniWarehouse.ApiClient
-@using MiniWarehouse.Helpers
 @using MiniWarehouse.Models
+@using MiniWarehouse.ViewModels
 
-@inject IApiClient ApiClient
+@inject HomeViewModel HomeViewModel
 
 <NavMenu />
 
@@ -21,7 +20,7 @@
 
                 @if (categories.Any())
                 {
-                    <InputSelect class="input" style="width:160px" @bind-Value="SelectedCategory.Name">
+                    <InputSelect class="input" style="width:160px" @bind-Value="selectedCategoryName">
                         <option value="">Všechny kategorie</option>
                         @foreach (var category in categories)
                         {
@@ -62,7 +61,7 @@
                 </tbody>
             </table>
 
-            <div style="margin-top:12px" class="note">Celkem: <strong>@TotalDisplay</strong></div>
+            <div style="margin-top:12px" class="note">Celkem: <strong>@HomeViewModel.TotalDisplay</strong></div>
         </div>
 
         <div style="margin-top:12px" class="card">
@@ -159,9 +158,6 @@
             <h4>Detaily / Uprava kategorie</h4>
             @if (categories.Any())
             {
-                <EditForm Model="@categoryCreate" OnValidSubmit="@EditCategorySubmit">
-                    <DataAnnotationsValidator />
-                    <ValidationSummary />
                     <div style="display:flex;flex-direction:column;gap:8px">
                         <label>Kategorie</label>
                         @if (categories.Any())
@@ -175,7 +171,13 @@
                                 }
                             </InputSelect>
                         }
+                        <div style="display:flex; gap:8px">
+                            <button class="btn" @onclick="DeleteCategory">Smazat kategorii</button>
+                        </div>
 
+                    <EditForm Model="@categoryCreate" OnValidSubmit="@EditCategorySubmit">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
                         <label>Nazev kategorie</label>
                         <input class="input" @bind="categoryCreate.Name" />
 
@@ -183,8 +185,8 @@
                             <button class="btn" type="submit">Přidat kategorii</button>
                             <button class="btn ghost" @onclick="CancelEdit">Zrusit</button>
                         </div>
+                    </EditForm>
                     </div>
-                </EditForm>
             }
             else
             {
@@ -196,9 +198,10 @@
 </div>
 
 @code{
-    private List<MiniWarehouse.Models.Product> displayed = new();
-    private List<MiniWarehouse.Models.Category> categories = new();
-    private MiniWarehouse.Models.Category SelectedCategory = new();
+    private List<Product> displayed => HomeViewModel.Products;
+    private List<Category> categories => HomeViewModel.Categories;
+    private string selectedCategoryName = "";
+
     private MiniWarehouse.Models.ProductCreate productCreate = new();
     private MiniWarehouse.Models.ProductCreate? productEdit = null;
     private MiniWarehouse.Models.Category categoryCreate = new();
@@ -210,66 +213,52 @@
 
     protected override async Task OnInitializedAsync()
     {
-        SelectedCategory.Id = Guid.Empty;
+        var categories = await HomeViewModel.LoadCategories();
+        var products = await HomeViewModel.LoadProducts();
 
-        await LoadCategories();
-        await LoadProducts();
+        if (!categories || !products)
+        {
+            errorMessage = HomeViewModel.ErrorMessage;
+            showErrorModal = true;
+        }
     }
-
 
     private async Task ApplyFilter()
     {
-        var search = new ProductSearch()
-        {
-            ProductName = searchTerm,
-            CategoryName = SelectedCategory.Name
-        };
+        var success = await HomeViewModel.SearchProducts(searchTerm, selectedCategoryName);
 
-        var searchQuery = ApiHelpers.BuildSearchQuery(search);
-
-        var searchedProducts = await ApiClient.GetAsync<Product>($"api/Product/search?{searchQuery}");
-
-        if (searchedProducts.Success && searchedProducts.Data != null)
+        if (!success)
         {
-            displayed = searchedProducts.Data;
-        }
-        else
-        {
-            errorMessage = searchedProducts.Error ?? "Neznámá chyba";
+            errorMessage = HomeViewModel.ErrorMessage;
             showErrorModal = true;
         }
     }
 
     private async Task CreateProductSubmit()
     {
-        var createProductResponse = await ApiClient.PostAsync<ProductCreate, ProductCreate>("api/Product", productCreate);
+        var success = await HomeViewModel.CreateProduct(productCreate);
 
-        if (!createProductResponse.Success)
+        if (!success)
         {
-            errorMessage = createProductResponse.Error ?? "Neznámá chyba";
+            errorMessage = HomeViewModel.ErrorMessage;
             showErrorModal = true;
-
+            return;
         }
 
         productCreate = new();
-
-        await LoadProducts();
     }   
 
-    private async Task DeleteProduct(MiniWarehouse.Models.Product p)
+    private async Task DeleteProduct(Product p)
     {
-        var deletedProducts = await ApiClient.DeleteAsync($"api/Product/{p.Id}");
+        var success = await HomeViewModel.DeleteProduct(p.Id);
 
-        if (!deletedProducts.Success)
+        if (!success)
         {
-            errorMessage = deletedProducts.Error ?? "Neznámá chyba";
+            errorMessage = HomeViewModel.ErrorMessage;
             showErrorModal = true;
-
         }
-
-        await LoadProducts();
     }
-
+    
     private void StartEdit(MiniWarehouse.Models.Product p)
     {
         productEdit = new()
@@ -282,30 +271,26 @@
         };
     }
 
-
     private async Task EditProductSubmit()
     {
         if (productEdit == null) return;
 
-        var createProductResponse = await ApiClient.PutAsync<ProductCreate, ProductCreate>($"api/Product/{productEdit.Id}", productEdit);
+        var success = await HomeViewModel.UpdateProduct(productEdit);
 
-        if (!createProductResponse.Success)
+        if (!success)
         {
-            errorMessage = createProductResponse.Error ?? "Neznámá chyba";
+            errorMessage = HomeViewModel.ErrorMessage;
             showErrorModal = true;
-
+            return;
         }
 
         productEdit = null;
-        await LoadProducts();
     }
-
 
     private void CancelEdit()
     {
         productEdit = null;
     }
-
 
     private void ClearForm()
     {
@@ -319,57 +304,27 @@
 
     private async Task EditCategorySubmit()
     {
-        var createCategoryResponse = await ApiClient.PostAsync<Category, Category>("api/Category", categoryCreate);
+        var success = await HomeViewModel.CreateCategory(categoryCreate);
 
-        if (!createCategoryResponse.Success)
+        if (!success)
         {
-            errorMessage = createCategoryResponse.Error ?? "Neznámá chyba";
+            errorMessage = HomeViewModel.ErrorMessage;
             showErrorModal = true;
-
+            return;
         }
 
         categoryCreate = new();
-
-        await LoadCategories();
     }
 
-    private string TotalDisplay
+    private async Task DeleteCategory()
     {
-        get
+        var success = await HomeViewModel.DeleteCategory(categoryCreate.Id);
+        if (!success)
         {
-            var all = displayed ?? new List<MiniWarehouse.Models.Product>();
-
-            decimal total = all.Sum(x => x.Price);
-            return total.ToString("0.00") + " Kč";
-        }
-    }
-
-    private async Task LoadProducts()
-    {
-        var productsResult = await ApiClient.GetAsync<Product>("api/Product");
-        if (productsResult.Success && productsResult.Data != null)
-        {
-            displayed = productsResult.Data;
-        }
-        else
-        {
-            errorMessage = productsResult.Error ?? "Neznámá chyba";
+            errorMessage = HomeViewModel.ErrorMessage;
             showErrorModal = true;
+            return;
         }
+        categoryCreate = new();
     }
-
-    private async Task LoadCategories()
-    {
-        var categoriesResult = await ApiClient.GetAsync<Category>("api/category");
-
-        if (categoriesResult.Success && categoriesResult.Data != null)
-        {
-            categories = categoriesResult.Data;
-        }
-        else
-        {
-            errorMessage = categoriesResult.Error ?? "Neznámá chyba";
-            showErrorModal = true;
-        }
-    }
-}  
+}

@@ -1,5 +1,4 @@
 ﻿using System.Net.Http.Json;
-using System.Text.Json;
 
 namespace MiniWarehouse.ApiClient
 {
@@ -49,7 +48,11 @@ namespace MiniWarehouse.ApiClient
                     {
                         try
                         {
-                            error = JsonSerializer.Deserialize<ErrorResponse>(content);
+                            return new ApiResult<T>
+                            {
+                                Success = false,
+                                Error = content
+                            };
                         }
                         catch
                         {

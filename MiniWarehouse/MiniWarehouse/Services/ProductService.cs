@@ -7,7 +7,6 @@ namespace MiniWarehouse.Services
     {
         public Task<List<Product>> GetAllAsync()
         {
-            // simulated small delay
             return Task.FromResult(dataRepository.Products.ToList());
         }
 
@@ -16,14 +15,11 @@ namespace MiniWarehouse.Services
             return Task.FromResult(dataRepository.Products.FirstOrDefault(p => p.Id == guid));
         }
 
-        public Task AddAsync(ProductCreate p)
+        public async Task<(ProductServiceResult Result, Product? Product)> AddAsync(ProductCreate p)
         {
-            // Convert ProductCreate to Product and add
             var category = dataRepository.Categories.FirstOrDefault(c => c.Id == p.CategoryId);
             if (category == null)
-            {
-                throw new KeyNotFoundException("Category not found.");
-            }
+                return (ProductServiceResult.CategoryNotFound, null);
 
             var prod = new Product
             {
@@ -36,7 +32,7 @@ namespace MiniWarehouse.Services
 
             dataRepository.Products.Add(prod);
 
-            return Task.CompletedTask;
+            return (ProductServiceResult.Success, prod);
         }
 
         public Task<ProductServiceResult> UpdateAsync(Guid id, ProductCreate updated)
@@ -73,17 +69,17 @@ namespace MiniWarehouse.Services
 
             if (!string.IsNullOrEmpty(productSearch.ProductName))
             {
-                query = query.Where(p => p.Name.Contains(productSearch.ProductName));
+                query = query.Where(p => p.Name.Contains(productSearch.ProductName, StringComparison.InvariantCultureIgnoreCase));
             }
 
             if (!string.IsNullOrEmpty(productSearch.Description))
             {
-                query = query.Where(p => p.Description.Contains(productSearch.Description));
+                query = query.Where(p => p.Description.Contains(productSearch.Description, StringComparison.InvariantCultureIgnoreCase));
             }
 
             if (!string.IsNullOrEmpty(productSearch.CategoryName))
             {
-                query = query.Where(p => p.Category.Name.Contains(productSearch.CategoryName));
+                query = query.Where(p => p.Category.Name.Contains(productSearch.CategoryName, StringComparison.InvariantCultureIgnoreCase));
             }
 
             return Task.FromResult(query.ToList());
