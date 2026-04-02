@@ -49,12 +49,37 @@ namespace MiniWarehouse.ApiClient
                     };
                 }
 
+                if (response.StatusCode == System.Net.HttpStatusCode.NoContent || response.Content.Headers.ContentLength == 0)
+                {
+                    return new ApiResult<T>
+                    {
+                        Success = true,
+                        Data = default
+                    };
+                }
+
                 var data = await response.Content.ReadFromJsonAsync<T>();
 
                 return new ApiResult<T>
                 {
                     Success = true,
                     Data = data!
+                };
+            }
+            catch (TaskCanceledException)
+            {
+                return new ApiResult<T>
+                {
+                    Success = false,
+                    Error = "Request timed out"
+                };
+            }
+            catch (HttpRequestException)
+            {
+                return new ApiResult<T>
+                {
+                    Success = false,
+                    Error = "Cannot reach server"
                 };
             }
             catch (Exception ex)

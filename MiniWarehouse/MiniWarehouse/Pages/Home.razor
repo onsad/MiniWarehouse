@@ -287,7 +287,7 @@
     {
         if (productEdit == null) return;
 
-        var createProductResponse = await ApiClient.PutAsync<ProductCreate, ProductCreate>("api/Product", productCreate);
+        var createProductResponse = await ApiClient.PutAsync<ProductCreate, ProductCreate>($"api/Product/{productEdit.Id}", productEdit);
 
         if (!createProductResponse.Success)
         {

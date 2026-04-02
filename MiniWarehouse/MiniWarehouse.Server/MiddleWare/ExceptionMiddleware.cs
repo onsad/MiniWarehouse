@@ -23,6 +23,10 @@
             {
                 await Handle(context, 400, ex.Message);
             }
+            catch (InvalidOperationException ex)
+            {
+                await Handle(context, 409, ex.Message);
+            }
             catch (Exception)
             {
                 await Handle(context, 500, "Neočekávaná chyba.");

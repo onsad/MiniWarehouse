@@ -1,9 +1,11 @@
+using MiniWarehouse.Repository;
 using MiniWarehouse.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
+builder.Services.AddSingleton<DataRepository>();
 builder.Services.AddSingleton<CategoryService>();
 builder.Services.AddSingleton<ProductService>();
 

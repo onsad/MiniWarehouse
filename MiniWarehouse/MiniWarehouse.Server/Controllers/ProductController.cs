@@ -43,12 +43,7 @@ namespace MiniWarehouse.Server.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if (!productService.Exists(id))
-                return NotFound();
-
-            var updated = await productService.UpdateAsync(id, product);
-            if (!updated)
-                return NotFound();
+            await productService.UpdateAsync(id, product);
 
             return NoContent();
         }
@@ -56,13 +51,8 @@ namespace MiniWarehouse.Server.Controllers
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> DeleteProduct(Guid id)
         {
-            if (!productService.Exists(id))
-                return NotFound();
-
-            var deleted = await productService.DeleteAsync(id);
-            if (!deleted)
-                return NotFound();
-
+            await productService.DeleteAsync(id);
+            
             return NoContent();
         }
 

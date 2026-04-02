@@ -52,33 +52,16 @@ namespace MiniWarehouse.Server.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            // Ensure the incoming model has the requested id
-            category.Id = id;
-
-            var existed = await categoryService.ExistsAsync(id);
-
-            if (!existed)
-                return NotFound();
-
-            var updated = await categoryService.UpdateCategoryAsync(id, category);
-            if (!updated)
-                return NotFound();
-
+            await categoryService.UpdateCategoryAsync(id, category);
+            
             return NoContent();
         }
 
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> DeleteCategory(Guid id)
         {
-            var existed = await categoryService.ExistsAsync(id);
-
-            if (!existed)
-                return NotFound();
-
-            var deleted = await categoryService.DeleteCategoryAsync(id);
-            if (!deleted)
-                return NotFound();
-
+            await categoryService.DeleteCategoryAsync(id);
+            
             return NoContent();
         }
     }

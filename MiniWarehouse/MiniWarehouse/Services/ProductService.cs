@@ -1,41 +1,25 @@
 ﻿using MiniWarehouse.Models;
+using MiniWarehouse.Repository;
 
 namespace MiniWarehouse.Services
 {
-    public class ProductService
+    public class ProductService(DataRepository dataRepository)
     {
-        private readonly CategoryService categoryService;
-        // In-memory storage
-        private readonly List<Product> products;
-
-        public ProductService(CategoryService categoryService)
-        {
-            this.categoryService = categoryService;
-            // initialize seed products using the category service
-            products = new()
-            {
-                new Product { Name = "Jablko", Category = this.categoryService.GetCategoryByName("Ovoce").Result, Description = "Cerstve cervene jablko", Price = 10.5m },
-                new Product { Name = "Banán", Category = this.categoryService.GetCategoryByName("Ovoce").Result, Description = "Zraly banan", Price = 8.9m },
-                new Product { Name = "Mléko", Category = this.categoryService.GetCategoryByName("Napoje").Result, Description = "1L polotucne", Price = 25m },
-                new Product { Name = "Chleba", Category = this.categoryService.GetCategoryByName("Pekarna").Result, Description = "Cerny chleba", Price = 30m }
-            };
-        }
-
         public Task<List<Product>> GetAllAsync()
         {
             // simulated small delay
-            return Task.FromResult(products.ToList());
+            return Task.FromResult(dataRepository.Products.ToList());
         }
 
         public Task<Product?> GetProductByIdAsync(Guid guid)
         {
-            return Task.FromResult(products.FirstOrDefault(p => p.Id == guid));
+            return Task.FromResult(dataRepository.Products.FirstOrDefault(p => p.Id == guid));
         }
 
         public Task AddAsync(ProductCreate p)
         {
             // Convert ProductCreate to Product and add
-            var category = categoryService.GetCategoryById(p.CategoryId).Result;
+            var category = dataRepository.Categories.FirstOrDefault(c => c.Id == p.CategoryId);
             if (category == null)
             {
                 throw new KeyNotFoundException("Category not found.");
@@ -50,25 +34,25 @@ namespace MiniWarehouse.Services
                 Price = p.Price
             };
 
-            products.Add(prod);
+            dataRepository.Products.Add(prod);
 
             return Task.CompletedTask;
         }
 
         public bool Exists(Guid id)
         {
-            return products.Any(p => p.Id == id);
+            return dataRepository.Products.Any(p => p.Id == id);
         }
 
         public Task<bool> UpdateAsync(Guid id, ProductCreate updated)
         {
-            var productToEdit = products.FirstOrDefault(p => p.Id == id);
+            var productToEdit = dataRepository.Products.FirstOrDefault(p => p.Id == id);
             if (productToEdit == null)
-                return Task.FromResult(false);
+                throw new KeyNotFoundException("Product not found.");
 
-            var category = categoryService.GetCategoryById(updated.CategoryId).Result;
+            var category = dataRepository.Categories.FirstOrDefault(c => c.Id == updated.CategoryId);
             if (category == null)
-                return Task.FromResult(false);
+                throw new KeyNotFoundException("Category not found.");
 
             productToEdit.Name = updated.Name;
             productToEdit.Category = category;
@@ -80,17 +64,17 @@ namespace MiniWarehouse.Services
 
         public Task<bool> DeleteAsync(Guid id)
         {
-            var existing = products.FirstOrDefault(p => p.Id == id);
+            var existing = dataRepository.Products.FirstOrDefault(p => p.Id == id);
             if (existing == null)
-                return Task.FromResult(false);
+                throw new KeyNotFoundException("Product not found.");
 
-            products.Remove(existing);
+            dataRepository.Products.Remove(existing);
             return Task.FromResult(true);
         }
 
         public Task<List<Product>> SearchProductsAsync(ProductSearch productSearch)
         {
-            var query = products;
+            var query = dataRepository.Products;
 
             if (!string.IsNullOrEmpty(productSearch.ProductName))
             {
