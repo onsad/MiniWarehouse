@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 using MiniWarehouse.Models;
 using MiniWarehouse.Services;
 
@@ -43,17 +44,26 @@ namespace MiniWarehouse.Server.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            await productService.UpdateAsync(id, product);
+            var result = await productService.UpdateAsync(id, product);
 
-            return NoContent();
+            return result switch
+            {
+                ProductServiceResult.NotFound => NotFound(),
+                ProductServiceResult.CategoryNotFound => BadRequest("Category not found."),
+                _ => NoContent()
+            };
         }
 
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> DeleteProduct(Guid id)
         {
-            await productService.DeleteAsync(id);
-            
-            return NoContent();
+            var result = await productService.DeleteAsync(id);
+
+            return result switch
+            {
+                ProductServiceResult.NotFound => NotFound(),
+                _ => NoContent()
+            };
         }
 
         [HttpGet("search", Name = "SearchProducts")]

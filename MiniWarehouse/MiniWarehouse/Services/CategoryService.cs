@@ -33,31 +33,31 @@ namespace MiniWarehouse.Services
             return Task.FromResult(dataRepository.Categories.Any(c => c.Id == id));
         }
 
-        public Task<bool> UpdateCategoryAsync(Guid id, Category category)
+        public Task<CategoryServiceResult> UpdateCategoryAsync(Guid id, Category category)
         {
             var existing = dataRepository.Categories.FirstOrDefault(c => c.Id == id);
             if (existing == null)
-                throw new KeyNotFoundException("Category not found.");
+                return Task.FromResult(CategoryServiceResult.NotFound);
 
             // Update properties
             existing.Name = category.Name;
 
-            return Task.FromResult(true);
+            return Task.FromResult(CategoryServiceResult.Success);
         }
 
-        public Task<bool> DeleteCategoryAsync(Guid id)
+        public Task<CategoryServiceResult> DeleteCategoryAsync(Guid id)
         {
             var existing = dataRepository.Categories.FirstOrDefault(c => c.Id == id);
             if (existing == null)
-                throw new KeyNotFoundException("Category not found.");
+                return Task.FromResult(CategoryServiceResult.NotFound);
 
             var productsWithCategory = dataRepository.Products.Any(p => p.Category.Id == id);
             if (productsWithCategory)
-                throw new InvalidOperationException("Category is used by products.");
+                return Task.FromResult(CategoryServiceResult.HasProducts);
 
             dataRepository.Categories.Remove(existing);
 
-            return Task.FromResult(true);
+            return Task.FromResult(CategoryServiceResult.Success);
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace MiniWarehouse.ApiClient
 {
@@ -40,7 +41,25 @@ namespace MiniWarehouse.ApiClient
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+                    var content = await response.Content.ReadAsStringAsync();
+
+                    ErrorResponse? error = null;
+
+                    if (!string.IsNullOrWhiteSpace(content))
+                    {
+                        try
+                        {
+                            error = JsonSerializer.Deserialize<ErrorResponse>(content);
+                        }
+                        catch
+                        {
+                            return new ApiResult<T>
+                            {
+                                Success = false,
+                                Error = error?.Message ?? "Unknown error"
+                            };
+                        }
+                    }
 
                     return new ApiResult<T>
                     {
@@ -58,7 +77,20 @@ namespace MiniWarehouse.ApiClient
                     };
                 }
 
-                var data = await response.Content.ReadFromJsonAsync<T>();
+                T? data = default;
+
+                try
+                {
+                    data = await response.Content.ReadFromJsonAsync<T>();
+                }
+                catch
+                {
+                    return new ApiResult<T>
+                    {
+                        Success = false,
+                        Error = "Invalid response from server"
+                    };
+                }
 
                 return new ApiResult<T>
                 {

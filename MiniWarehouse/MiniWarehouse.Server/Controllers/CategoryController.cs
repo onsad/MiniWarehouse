@@ -52,17 +52,26 @@ namespace MiniWarehouse.Server.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            await categoryService.UpdateCategoryAsync(id, category);
-            
-            return NoContent();
+            var result = await categoryService.UpdateCategoryAsync(id, category);
+
+            return result switch
+            {
+                CategoryServiceResult.NotFound => NotFound(),
+                _ => NoContent()
+            };
         }
 
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> DeleteCategory(Guid id)
         {
-            await categoryService.DeleteCategoryAsync(id);
-            
-            return NoContent();
+            var result = await categoryService.DeleteCategoryAsync(id);
+
+            return result switch
+            {
+                CategoryServiceResult.NotFound => NotFound(),
+                CategoryServiceResult.HasProducts => BadRequest("Category is used by products."),
+                _ => NoContent()
+            };
         }
     }
 }

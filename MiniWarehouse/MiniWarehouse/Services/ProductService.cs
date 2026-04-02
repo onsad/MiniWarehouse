@@ -39,56 +39,51 @@ namespace MiniWarehouse.Services
             return Task.CompletedTask;
         }
 
-        public bool Exists(Guid id)
-        {
-            return dataRepository.Products.Any(p => p.Id == id);
-        }
-
-        public Task<bool> UpdateAsync(Guid id, ProductCreate updated)
+        public Task<ProductServiceResult> UpdateAsync(Guid id, ProductCreate updated)
         {
             var productToEdit = dataRepository.Products.FirstOrDefault(p => p.Id == id);
             if (productToEdit == null)
-                throw new KeyNotFoundException("Product not found.");
+                return Task.FromResult(ProductServiceResult.NotFound);
 
             var category = dataRepository.Categories.FirstOrDefault(c => c.Id == updated.CategoryId);
             if (category == null)
-                throw new KeyNotFoundException("Category not found.");
+                return Task.FromResult(ProductServiceResult.CategoryNotFound);
 
             productToEdit.Name = updated.Name;
             productToEdit.Category = category;
             productToEdit.Description = updated.Description;
             productToEdit.Price = updated.Price;
 
-            return Task.FromResult(true);
+            return Task.FromResult(ProductServiceResult.Success);
         }
 
-        public Task<bool> DeleteAsync(Guid id)
+        public Task<ProductServiceResult> DeleteAsync(Guid id)
         {
             var existing = dataRepository.Products.FirstOrDefault(p => p.Id == id);
             if (existing == null)
-                throw new KeyNotFoundException("Product not found.");
+                return Task.FromResult(ProductServiceResult.NotFound);
 
             dataRepository.Products.Remove(existing);
-            return Task.FromResult(true);
+            return Task.FromResult(ProductServiceResult.Success);
         }
 
         public Task<List<Product>> SearchProductsAsync(ProductSearch productSearch)
         {
-            var query = dataRepository.Products;
+            var query = dataRepository.Products.AsQueryable();
 
             if (!string.IsNullOrEmpty(productSearch.ProductName))
             {
-                query = query.Where(p => p.Name.Contains(productSearch.ProductName)).ToList();
+                query = query.Where(p => p.Name.Contains(productSearch.ProductName));
             }
 
             if (!string.IsNullOrEmpty(productSearch.Description))
             {
-                query = query.Where(p => p.Description.Contains(productSearch.Description)).ToList();
+                query = query.Where(p => p.Description.Contains(productSearch.Description));
             }
 
             if (!string.IsNullOrEmpty(productSearch.CategoryName))
             {
-                query = query.Where(p => p.Category.Name.Contains(productSearch.CategoryName)).ToList();
+                query = query.Where(p => p.Category.Name.Contains(productSearch.CategoryName));
             }
 
             return Task.FromResult(query.ToList());
