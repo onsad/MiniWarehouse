@@ -24,7 +24,7 @@ namespace MiniWarehouse.ViewModels
 
             if (!result.Success || result.Data == null)
             {
-                ErrorMessage = result.Error ?? "Neznámá chyba";
+                ErrorMessage = result.Error ?? "Unknown error";
                 return false;
             }
 
@@ -38,7 +38,7 @@ namespace MiniWarehouse.ViewModels
 
             if (!result.Success || result.Data == null)
             {
-                ErrorMessage = result.Error ?? "Neznámá chyba";
+                ErrorMessage = result.Error ?? "Unknown error";
                 return false;
             }
 
@@ -52,7 +52,7 @@ namespace MiniWarehouse.ViewModels
 
             if (!result.Success || result.Data == null)
             {
-                ErrorMessage = result.Error ?? "Neznámá chyba";
+                ErrorMessage = result.Error ?? "Unknown error";
                 return false;
             }
 
@@ -66,7 +66,7 @@ namespace MiniWarehouse.ViewModels
 
             if (!result.Success)
             {
-                ErrorMessage = result.Error ?? "Neznámá chyba";
+                ErrorMessage = result.Error ?? "Unknown error";
                 return false;
             }
 
@@ -81,7 +81,7 @@ namespace MiniWarehouse.ViewModels
 
             if (!result.Success)
             {
-                ErrorMessage = result.Error ?? "Neznámá chyba";
+                ErrorMessage = result.Error ?? "Unknown error";
                 return false;
             }
 
@@ -111,7 +111,7 @@ namespace MiniWarehouse.ViewModels
 
             if (!result.Success || result.Data == null)
             {
-                ErrorMessage = result.Error ?? "Neznámá chyba";
+                ErrorMessage = result.Error ?? "Unknown error";
                 return false;
             }
 
@@ -125,7 +125,7 @@ namespace MiniWarehouse.ViewModels
 
             if (!result.Success || result.Data == null)
             {
-                ErrorMessage = result.Error ?? "Neznámá chyba";
+                ErrorMessage = result.Error ?? "Unknown error";
                 return false;
             }
 
@@ -139,7 +139,7 @@ namespace MiniWarehouse.ViewModels
 
             if (!result.Success)
             {
-                ErrorMessage = result.Error ?? "Neznámá chyba";
+                ErrorMessage = result.Error ?? "Unknown error";
                 return false;
             }
 

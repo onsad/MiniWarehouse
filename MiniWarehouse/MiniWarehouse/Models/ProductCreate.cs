@@ -22,7 +22,6 @@ namespace MiniWarehouse.Models
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
-            // Check that category Guid is provided
             if (CategoryId == Guid.Empty)
             {
                 yield return new ValidationResult("Category is required.", new[] { nameof(CategoryId) });

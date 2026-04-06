@@ -6,8 +6,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.Services.AddSingleton<DataRepository>();
-builder.Services.AddSingleton<CategoryService>();
-builder.Services.AddSingleton<ProductService>();
+builder.Services.AddSingleton<ICategoryService, CategoryService>();
+builder.Services.AddSingleton<IProductService, ProductService>();
 
 builder.Services.AddControllers();
 // Development CORS policy - allow the Blazor WASM client to call this API during development.

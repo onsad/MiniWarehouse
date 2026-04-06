@@ -6,7 +6,7 @@ namespace MiniWarehouse.Server.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class ProductController(ProductService productService) : ControllerBase
+    public class ProductController(IProductService productService) : ControllerBase
     {
         [HttpGet(Name = "GetAllProducts")]
         public async Task<ActionResult<List<Product>>> GetAllProducts()

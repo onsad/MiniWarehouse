@@ -29,7 +29,7 @@
             }
             catch (Exception)
             {
-                await Handle(context, 500, "Neočekávaná chyba.");
+                await Handle(context, 500, "Server error.");
             }
         }
 

@@ -3,7 +3,7 @@ using MiniWarehouse.Repository;
 
 namespace MiniWarehouse.Services
 {
-    public class CategoryService(DataRepository dataRepository)
+    public class CategoryService(DataRepository dataRepository) : ICategoryService
     {
         public Task<List<Category>> GetAllAsync()
         {
