@@ -9,71 +9,74 @@ namespace MiniWarehouse.Server.Controllers
     public class ProductController(IProductService productService) : ControllerBase
     {
         [HttpGet(Name = "GetAllProducts")]
-        public async Task<ActionResult<List<Product>>> GetAllProducts()
+        public ActionResult<List<Product>> GetProducts()
         {
-            var products = await productService.GetAllAsync();
+            var products = productService.GetAll();
             return Ok(products);
         }
 
         [HttpGet("{id:guid}", Name = "GetProductById")]
-        public async Task<ActionResult<Product>> GetProductById(Guid id)
+        public ActionResult<Product> GetProduct(Guid id)
         {
-            var product = await productService.GetProductByIdAsync(id);
+            var product = productService.GetById(id);
             if (product == null)
                 return NotFound();
+
             return Ok(product);
         }
 
         [HttpPost]
-        public async Task<ActionResult<Product>> CreateProduct(ProductCreate product)
+        public ActionResult<Product> CreateProduct(ProductCreate product)
         {
-            if (ModelState.IsValid)
-            {
-                var (result, created) = await productService.AddAsync(product);
+            var result = productService.Add(product);
 
-                return result switch
-                {
-                    ProductServiceResult.CategoryNotFound => BadRequest("Category not found."),
-                    ProductServiceResult.Success => CreatedAtAction(nameof(GetProductById), new { id = created!.Id }, created),
-                    _ => NoContent()
-                };
-            }
+            if (!result.Success)
+                return BadRequest(result.Error);
 
-            return BadRequest(ModelState);
+            return CreatedAtAction(nameof(GetProduct),
+                new { id = result.Data!.Id },
+                result.Data);
         }
 
         [HttpPut("{id:guid}")]
-        public async Task<IActionResult> UpdateProduct(Guid id, ProductCreate product)
+        public ActionResult<Product> UpdateProduct(Guid id, ProductCreate product)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            var result = productService.Update(id, product);
 
-            var result = await productService.UpdateAsync(id, product);
-
-            return result switch
+            if (!result.Success)
             {
-                ProductServiceResult.NotFound => NotFound(),
-                ProductServiceResult.CategoryNotFound => BadRequest("Category not found."),
-                _ => NoContent()
-            };
+                return result.Error switch
+                {
+                    "NotFound" => NotFound(),
+                    "CategoryNotFound" => BadRequest("Category not found."),
+                    _ => StatusCode(500)
+                };
+            }
+
+            return Ok(result.Data);
         }
 
         [HttpDelete("{id:guid}")]
-        public async Task<IActionResult> DeleteProduct(Guid id)
+        public IActionResult DeleteProduct(Guid id)
         {
-            var result = await productService.DeleteAsync(id);
+            var result = productService.Delete(id);
 
-            return result switch
+            if (!result.Success)
             {
-                ProductServiceResult.NotFound => NotFound(),
-                _ => NoContent()
-            };
+                return result.Error switch
+                {
+                    "NotFound" => NotFound(),
+                    _ => StatusCode(500)
+                };
+            }
+
+            return NoContent();
         }
 
         [HttpGet("search", Name = "SearchProducts")]
         public async Task<ActionResult<List<Product>>> SearchAllProducts([FromQuery] ProductSearch productSearch)
         {
-            var products = await productService.SearchProductsAsync(productSearch);
+            var products = productService.SearchProducts(productSearch);
             return Ok(products);
         }
     }

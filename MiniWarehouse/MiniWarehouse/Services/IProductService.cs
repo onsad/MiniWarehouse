@@ -4,11 +4,11 @@ namespace MiniWarehouse.Services
 {
     public interface IProductService
     {
-        Task<List<Product>> GetAllAsync();
-        Task<Product?> GetProductByIdAsync(Guid guid);
-        Task<(ProductServiceResult Result, Product? Product)> AddAsync(ProductCreate p);
-        Task<ProductServiceResult> UpdateAsync(Guid id, ProductCreate updated);
-        Task<ProductServiceResult> DeleteAsync(Guid id);
-        Task<List<Product>> SearchProductsAsync(ProductSearch productSearch);
+        List<Product> GetAll();
+        Product? GetById(Guid guid);
+        ServiceResult<Product> Add(ProductCreate p);
+        ServiceResult<Product> Update(Guid id, ProductCreate updated);
+        ServiceResult<bool> Delete(Guid id);
+        List<Product> SearchProducts(ProductSearch productSearch);
     }
 }

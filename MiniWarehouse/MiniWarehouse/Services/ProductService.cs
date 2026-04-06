@@ -5,25 +5,25 @@ namespace MiniWarehouse.Services
 {
     public class ProductService(DataRepository dataRepository) : IProductService
     {
-        public Task<List<Product>> GetAllAsync()
+        public List<Product> GetAll()
         {
-            return Task.FromResult(dataRepository.Products.ToList());
+            return dataRepository.Products.ToList();
         }
 
-        public Task<Product?> GetProductByIdAsync(Guid guid)
+        public Product? GetById(Guid guid)
         {
-            return Task.FromResult(dataRepository.Products.FirstOrDefault(p => p.Id == guid));
+            return dataRepository.Products.FirstOrDefault(p => p.Id == guid);
         }
 
-        public async Task<(ProductServiceResult Result, Product? Product)> AddAsync(ProductCreate p)
+        public ServiceResult<Product> Add(ProductCreate p)
         {
             var category = dataRepository.Categories.FirstOrDefault(c => c.Id == p.CategoryId);
             if (category == null)
-                return (ProductServiceResult.CategoryNotFound, null);
+                return ServiceResult<Product>.Fail("Category not found");
 
             var prod = new Product
             {
-                Id = p.Id,
+                Id = Guid.NewGuid(),
                 Name = p.Name,
                 Category = category,
                 Description = p.Description,
@@ -32,38 +32,42 @@ namespace MiniWarehouse.Services
 
             dataRepository.Products.Add(prod);
 
-            return (ProductServiceResult.Success, prod);
+            return ServiceResult<Product>.Ok(prod);
         }
 
-        public Task<ProductServiceResult> UpdateAsync(Guid id, ProductCreate updated)
+        public ServiceResult<Product> Update(Guid id, ProductCreate updated)
         {
+            if (updated == null)
+                throw new ArgumentNullException(nameof(updated));
+
             var productToEdit = dataRepository.Products.FirstOrDefault(p => p.Id == id);
             if (productToEdit == null)
-                return Task.FromResult(ProductServiceResult.NotFound);
+                return ServiceResult<Product>.Fail("NotFound");
 
             var category = dataRepository.Categories.FirstOrDefault(c => c.Id == updated.CategoryId);
             if (category == null)
-                return Task.FromResult(ProductServiceResult.CategoryNotFound);
+                return ServiceResult<Product>.Fail("CategoryNotFound");
 
             productToEdit.Name = updated.Name;
             productToEdit.Category = category;
             productToEdit.Description = updated.Description;
             productToEdit.Price = updated.Price;
 
-            return Task.FromResult(ProductServiceResult.Success);
+            return ServiceResult<Product>.Ok(productToEdit);
         }
 
-        public Task<ProductServiceResult> DeleteAsync(Guid id)
+        public ServiceResult<bool> Delete(Guid id)
         {
             var existing = dataRepository.Products.FirstOrDefault(p => p.Id == id);
             if (existing == null)
-                return Task.FromResult(ProductServiceResult.NotFound);
+                return ServiceResult<bool>.Fail("NotFound");
 
             dataRepository.Products.Remove(existing);
-            return Task.FromResult(ProductServiceResult.Success);
+
+            return ServiceResult<bool>.Ok(true);
         }
 
-        public Task<List<Product>> SearchProductsAsync(ProductSearch productSearch)
+        public List<Product> SearchProducts(ProductSearch productSearch)
         {
             var query = dataRepository.Products.AsQueryable();
 
@@ -82,7 +86,7 @@ namespace MiniWarehouse.Services
                 query = query.Where(p => p.Category.Name.Contains(productSearch.CategoryName, StringComparison.InvariantCultureIgnoreCase));
             }
 
-            return Task.FromResult(query.ToList());
+            return query.ToList();
         }
     }
 }

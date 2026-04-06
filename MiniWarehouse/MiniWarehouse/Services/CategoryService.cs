@@ -5,59 +5,60 @@ namespace MiniWarehouse.Services
 {
     public class CategoryService(DataRepository dataRepository) : ICategoryService
     {
-        public Task<List<Category>> GetAllAsync()
+        public List<Category> GetAll()
         {
-            var categories = dataRepository.Categories.ToList();
-            return Task.FromResult(categories);
-        }   
-
-        public Task<Category?> GetCategoryByName(string name)
-        {
-            return Task.FromResult(dataRepository.Categories.FirstOrDefault(c => c.Name.Equals(name, StringComparison.OrdinalIgnoreCase)));
+            return dataRepository.Categories.ToList();
         }
 
-        public Task<Category?> GetCategoryById(Guid guid)
+        public Category? GetById(Guid id)
         {
-            return Task.FromResult(dataRepository.Categories.FirstOrDefault(c => c.Id == guid));
+            return dataRepository.Categories.FirstOrDefault(c => c.Id == id);
         }
 
-        public Task AddCategoryAsync(Category category)
+        public Category? GetByName(string name)
         {
+            return dataRepository.Categories
+                .FirstOrDefault(c => c.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+        }
+
+        public ServiceResult<Category> Add(Category category)
+        {
+            if (category == null)
+                throw new ArgumentNullException(nameof(category));
+
             category.Id = Guid.NewGuid();
             dataRepository.Categories.Add(category);
 
-            return Task.CompletedTask;
+            return ServiceResult<Category>.Ok(category);
         }
 
-        public Task<bool> ExistsAsync(Guid id)
+        public ServiceResult<Category> Update(Guid id, Category updated)
         {
-            return Task.FromResult(dataRepository.Categories.Any(c => c.Id == id));
+            if (updated == null)
+                throw new ArgumentNullException(nameof(updated));
+
+            var existing = dataRepository.Categories.FirstOrDefault(c => c.Id == id);
+            if (existing == null)
+                return ServiceResult<Category>.Fail("NotFound");
+
+            existing.Name = updated.Name;
+
+            return ServiceResult<Category>.Ok(existing);
         }
 
-        public Task<CategoryServiceResult> UpdateCategoryAsync(Guid id, Category category)
+        public ServiceResult<bool> Delete(Guid id)
         {
             var existing = dataRepository.Categories.FirstOrDefault(c => c.Id == id);
             if (existing == null)
-                return Task.FromResult(CategoryServiceResult.NotFound);
+                return ServiceResult<bool>.Fail("NotFound");
 
-            existing.Name = category.Name;
-
-            return Task.FromResult(CategoryServiceResult.Success);
-        }
-
-        public Task<CategoryServiceResult> DeleteCategoryAsync(Guid id)
-        {
-            var existing = dataRepository.Categories.FirstOrDefault(c => c.Id == id);
-            if (existing == null)
-                return Task.FromResult(CategoryServiceResult.NotFound);
-
-            var productsWithCategory = dataRepository.Products.Any(p => p.Category.Id == id);
-            if (productsWithCategory)
-                return Task.FromResult(CategoryServiceResult.HasProducts);
+            var hasProducts = dataRepository.Products.Any(p => p.Category.Id == id);
+            if (hasProducts)
+                return ServiceResult<bool>.Fail("HasProducts");
 
             dataRepository.Categories.Remove(existing);
 
-            return Task.FromResult(CategoryServiceResult.Success);
+            return ServiceResult<bool>.Ok(true);
         }
     }
 }

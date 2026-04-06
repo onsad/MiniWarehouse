@@ -4,12 +4,11 @@ namespace MiniWarehouse.Services
 {
     public interface ICategoryService
     {
-        Task<List<Category>> GetAllAsync();
-        Task<Category?> GetCategoryByName(string name);
-        Task<Category?> GetCategoryById(Guid guid);
-        Task AddCategoryAsync(Category category);
-        Task<bool> ExistsAsync(Guid id);
-        Task<CategoryServiceResult> UpdateCategoryAsync(Guid id, Category category);
-        Task<CategoryServiceResult> DeleteCategoryAsync(Guid id);
+        List<Category> GetAll();
+        Category? GetByName(string name);
+        Category? GetById(Guid id);
+        ServiceResult<Category> Add(Category category);
+        ServiceResult<Category> Update(Guid id, Category updated);
+        ServiceResult<bool> Delete(Guid id);
     }
 }

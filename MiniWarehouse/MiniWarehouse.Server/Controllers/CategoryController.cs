@@ -8,70 +8,79 @@ namespace MiniWarehouse.Server.Controllers
     [Route("api/[controller]")]
     public class CategoryController(ICategoryService categoryService) : ControllerBase
     {
-        [HttpGet(Name = "GetAllCategories")]
-        public async Task<ActionResult<List<Category>>> GetAllCategories()
+        [HttpGet]
+        public ActionResult<List<Category>> GetCategories()
         {
-            var categories = await categoryService.GetAllAsync();
+            var categories = categoryService.GetAll();
             return Ok(categories);
         }
 
-        [HttpGet("{id:guid}", Name = "GetCategoryById")]
-        public async Task<ActionResult<Category>> GetCategoryById(Guid id)
+        [HttpGet("{id:guid}")]
+        public ActionResult<Category> GetCategory(Guid id)
         {
-            var category = await categoryService.GetCategoryById(id);
+            var category = categoryService.GetById(id);
             if (category == null)
                 return NotFound();
+
             return Ok(category);
         }
 
-        [HttpGet("{name:alpha}", Name = "GetCategoryByName")]
-        public async Task<ActionResult<Category>> GetCategoryByName(string name)
+        [HttpGet("by-name/{name}")]
+        public ActionResult<Category> GetCategoryByName(string name)
         {
-            var category = await categoryService.GetCategoryByName(name);
+            var category = categoryService.GetByName(name);
             if (category == null)
                 return NotFound();
+
             return Ok(category);
         }
 
         [HttpPost]
-        public async Task<ActionResult<Category>> CreateCategory(Category category)
+        public ActionResult<Category> CreateCategory(Category category)
         {
-            if (ModelState.IsValid)
-            {
-                await categoryService.AddCategoryAsync(category);
+            var result = categoryService.Add(category);
 
-                return CreatedAtAction(nameof(GetCategoryById), new { id = category.Id }, category);
-            }
+            if (!result.Success)
+                return BadRequest(result.Error);
 
-            return BadRequest(ModelState);
+            return CreatedAtAction(nameof(GetCategory),
+                new { id = result.Data!.Id },
+                result.Data);
         }
 
         [HttpPut("{id:guid}")]
-        public async Task<IActionResult> UpdateCategory(Guid id, Category category)
+        public ActionResult<Category> UpdateCategory(Guid id, Category category)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            var result = categoryService.Update(id, category);
 
-            var result = await categoryService.UpdateCategoryAsync(id, category);
-
-            return result switch
+            if (!result.Success)
             {
-                CategoryServiceResult.NotFound => NotFound(),
-                _ => NoContent()
-            };
+                return result.Error switch
+                {
+                    "NotFound" => NotFound(),
+                    _ => StatusCode(500)
+                };
+            }
+
+            return Ok(result.Data);
         }
 
         [HttpDelete("{id:guid}")]
-        public async Task<IActionResult> DeleteCategory(Guid id)
+        public IActionResult DeleteCategory(Guid id)
         {
-            var result = await categoryService.DeleteCategoryAsync(id);
+            var result = categoryService.Delete(id);
 
-            return result switch
+            if (!result.Success)
             {
-                CategoryServiceResult.NotFound => NotFound(),
-                CategoryServiceResult.HasProducts => BadRequest("Category is used by products."),
-                _ => NoContent()
-            };
+                return result.Error switch
+                {
+                    "NotFound" => NotFound(),
+                    "HasProducts" => BadRequest("Category is used by products."),
+                    _ => StatusCode(500)
+                };
+            }
+
+            return NoContent();
         }
     }
 }
